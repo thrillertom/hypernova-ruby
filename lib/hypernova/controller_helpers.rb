@@ -68,6 +68,12 @@ module Hypernova
       @hypernova_batch_mapping = {}
     end
 
+    RENDER_STATUS_REGEX = /data-hypernova-cache/
+
+    def render_result_without_cache
+      response.headers['Cache-Control'] = 'no-store'
+    end
+
     ##
     # Modifies response.body to have all batched hypernova render results
     def hypernova_batch_after
@@ -75,7 +81,15 @@ module Hypernova
         raise NilBatchError.new('called hypernova_batch_after without calling '\
           'hypernova_batch_before. Check your around_filter for :hypernova_render_support')
       end
-      return if @hypernova_batch.empty?
+
+      # Tell downstream not to cache when there is nothing to render.
+      # This case happened when hypernova-ruby runs the hypernova_batch_before and hypernova_batch_after method without running
+      # render_react_component to push the job into the list. Currently, it's known to have this behavior when render_react_component
+      # is in a cache_when block.
+
+      if @hypernova_batch.empty?
+        return render_result_without_cache
+      end
 
       jobs = @hypernova_batch.jobs
       hash = jobs.each_with_object({}) do |job, h|
@@ -100,6 +114,16 @@ module Hypernova
         @hypernova_batch_mapping,
         result
       )
+
+      # Everytime when render failed (perhaps due to timeout), it will call the `BlankRenderer.render()` to render a fallback html with attribute `data-hypernova-cache`
+      # in the first html tag. If the rendering failed, call the render_result_without_cache method to tell downstream not to cache it
+
+      new_body.scan(RENDER_STATUS_REGEX) do |matched|
+        if matched
+          render_result_without_cache
+        end
+      end
+
       response.body = new_body
     end
   end
