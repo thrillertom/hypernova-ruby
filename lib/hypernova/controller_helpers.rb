@@ -71,7 +71,9 @@ module Hypernova
     RENDER_STATUS_REGEX = /data-hypernova-cache/
 
     def render_result_without_cache
-      response.headers['Cache-Control'] = 'no-store'
+      if defined? response
+        response.headers['Cache-Control'] = 'no-store'
+      end
     end
 
     ##
@@ -109,11 +111,19 @@ module Hypernova
         result = @hypernova_batch.submit_fallback!
       end
 
-      new_body = Hypernova.replace_tokens_with_result(
-        response.body,
-        @hypernova_batch_mapping,
-        result
-      )
+      new_body = ""
+
+      if defined? response
+        new_body = Hypernova.replace_tokens_with_result(
+          response.body,
+          @hypernova_batch_mapping,
+          result
+        )
+      else
+        result.each do |key, value|
+          new_body += value
+        end
+      end
 
       # Everytime when render failed (perhaps due to timeout), it will call the `BlankRenderer.render()` to render a fallback html with attribute `data-hypernova-cache`
       # in the first html tag. If the rendering failed, call the render_result_without_cache method to tell downstream not to cache it
@@ -124,7 +134,34 @@ module Hypernova
         end
       end
 
-      response.body = new_body
+      if defined? response
+        response.body = new_body
+      else
+        return new_body.html_safe
+      end
+
+    end
+
+    def render_react_component_without_response(component, data = {})
+      @hypernova_batch = Hypernova::Batch.new(hypernova_service)
+      @hypernova_batch_mapping = {}
+
+      begin
+        new_data = get_view_data(component, data)
+      rescue StandardError => e
+        on_error(e)
+        new_data = data
+      end
+      job = {
+        :data => new_data,
+        :name => component,
+      }
+
+      batch_token = @hypernova_batch.render(job)
+      template_safe_token = Hypernova.render_token(batch_token)
+      @hypernova_batch_mapping[template_safe_token] = batch_token
+
+      hypernova_batch_after
     end
   end
 end
