@@ -5,6 +5,5 @@ if defined?(ActionController::Base)
     include Hypernova::ControllerHelpers
 
     helper_method :render_react_component
-    helper_method :render_react_component_without_response
   end
 end
