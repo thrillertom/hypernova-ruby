@@ -161,7 +161,42 @@ module Hypernova
       template_safe_token = Hypernova.render_token(batch_token)
       @hypernova_batch_mapping[template_safe_token] = batch_token
 
-      hypernova_batch_after
+      return if @hypernova_batch.empty?
+
+      jobs = @hypernova_batch.jobs
+      hash = jobs.each_with_object({}) do |job, h|
+        h[job[:name]] = job
+      end
+      hash = prepare_request(hash, hash)
+      if send_request?(hash)
+        begin
+          will_send_request(hash)
+          result = @hypernova_batch.submit!
+          on_success(result, hash)
+        rescue StandardError => e
+          on_error(e)
+          result = @hypernova_batch.submit_fallback!
+        end
+      else
+        result = @hypernova_batch.submit_fallback!
+      end
+
+      new_body = ""
+
+      result.each do |key, value|
+        new_body += value
+      end
+
+      # Everytime when render failed (perhaps due to timeout), it will call the `BlankRenderer.render()` to render a fallback html with attribute `data-hypernova-cache`
+      # in the first html tag. If the rendering failed, call the render_result_without_cache method to tell downstream not to cache it
+
+      new_body.scan(RENDER_STATUS_REGEX) do |matched|
+        if matched
+          render_result_without_cache
+        end
+      end
+
+      return new_body.html_safe
     end
   end
 end
