@@ -7,6 +7,8 @@ module Hypernova
   # thrown by ControllerHelper methods if you don't call hypernova_batch_before first
   class NilBatchError < StandardError; end
 
+  class SSRError < StandardError; end
+
   # thrown by Batch#render if your job doesn't have the right keys and stuff.
   class BadJobError < StandardError; end
 

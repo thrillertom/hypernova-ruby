@@ -16,7 +16,7 @@ class Hypernova::Configuration
     @open_timeout = 0.1
     @scheme = :http
     @timeout = 0.6
-    @fallback = true
+    @fallback = false
   end
 
   def http_adapter

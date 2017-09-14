@@ -12,7 +12,6 @@ module Hypernova
     ##
     # a Rails around_filter to support hypernova batch rendering.
     def hypernova_render_support
-      @configuration = Hypernova.configuration
       hypernova_batch_before
       yield
       hypernova_batch_after
@@ -80,6 +79,7 @@ module Hypernova
     ##
     # Modifies response.body to have all batched hypernova render results
     def hypernova_batch_after
+      @fallback = Hypernova.configuration.fallback
       if @hypernova_batch.nil?
         raise NilBatchError.new('called hypernova_batch_after without calling '\
           'hypernova_batch_before. Check your around_filter for :hypernova_render_support')
@@ -106,10 +106,18 @@ module Hypernova
           on_success(result, hash)
         rescue StandardError => e
           on_error(e)
-          result = @hypernova_batch.submit_fallback! if !@configuration.fallback
+          if @fallback
+            result = @hypernova_batch.submit_fallback!
+          elsif
+            raise SSRError.new('Seems some change in `index-prerender-bundle.js` break the SSR(server-side-rendering), please use the `__SERVER_RENDERING__` flag in FE to avoid the problematic code.')
+          end
         end
       else
-        result = @hypernova_batch.submit_fallback! if !@configuration.fallback
+        if @fallback
+          result = @hypernova_batch.submit_fallback!
+        elsif
+          raise SSRError.new('Seems some change in `index-prerender-bundle.js` break the SSR(server-side-rendering), please use the `__SERVER_RENDERING__` flag in FE to avoid the problematic code.')
+        end
       end
 
       new_body = ""
@@ -144,6 +152,7 @@ module Hypernova
     end
 
     def render_react_component_without_response(component, data = {})
+      @fallback = Hypernova.configuration.fallback
       @hypernova_batch = Hypernova::Batch.new(hypernova_service)
       @hypernova_batch_mapping = {}
 
@@ -176,10 +185,18 @@ module Hypernova
           on_success(result, hash)
         rescue StandardError => e
           on_error(e)
-          result = @hypernova_batch.submit_fallback! if !@configuration.fallback
+          if @fallback
+            result = @hypernova_batch.submit_fallback!
+          elsif
+            raise SSRError.new('Seems some change in `index-prerender-bundle.js` break the SSR(server-side-rendering), please use the `__SERVER_RENDERING__` flag in FE to avoid the problematic code.')
+          end
         end
       else
-        result = @hypernova_batch.submit_fallback! if !@configuration.fallback
+        if @fallback
+          result = @hypernova_batch.submit_fallback!
+        elsif
+          raise SSRError.new('Seems some change in `index-prerender-bundle.js` break the SSR(server-side-rendering), please use the `__SERVER_RENDERING__` flag in FE to avoid the problematic code.')
+        end
       end
 
       new_body = ""
