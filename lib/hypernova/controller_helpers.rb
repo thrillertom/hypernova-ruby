@@ -109,14 +109,14 @@ module Hypernova
           if @fallback
             result = @hypernova_batch.submit_fallback!
           elsif
-            raise SSRError.new('Seems some change in `index-prerender-bundle.js` break the SSR(server-side-rendering), please use the `__SERVER_RENDERING__` flag in FE to avoid the problematic code.')
+            raise SSRError.new('Server side rendering failed due to error in code.')
           end
         end
       else
         if @fallback
           result = @hypernova_batch.submit_fallback!
         elsif
-          raise SSRError.new('Seems some change in `index-prerender-bundle.js` break the SSR(server-side-rendering), please use the `__SERVER_RENDERING__` flag in FE to avoid the problematic code.')
+          raise SSRError.new('Server side rendering failed due to error in code.')
         end
       end
 
@@ -188,14 +188,14 @@ module Hypernova
           if @fallback
             result = @hypernova_batch.submit_fallback!
           elsif
-            raise SSRError.new('Seems some change in `index-prerender-bundle.js` break the SSR(server-side-rendering), please use the `__SERVER_RENDERING__` flag in FE to avoid the problematic code.')
+            raise SSRError.new('Server side rendering failed due to error in code.')
           end
         end
       else
         if @fallback
           result = @hypernova_batch.submit_fallback!
         elsif
-          raise SSRError.new('Seems some change in `index-prerender-bundle.js` break the SSR(server-side-rendering), please use the `__SERVER_RENDERING__` flag in FE to avoid the problematic code.')
+          raise SSRError.new('Server side rendering failed due to error in code.')
         end
       end
 
