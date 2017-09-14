@@ -12,6 +12,7 @@ module Hypernova
     ##
     # a Rails around_filter to support hypernova batch rendering.
     def hypernova_render_support
+      @configuration = Hypernova.configuration
       hypernova_batch_before
       yield
       hypernova_batch_after
@@ -105,10 +106,10 @@ module Hypernova
           on_success(result, hash)
         rescue StandardError => e
           on_error(e)
-          result = @hypernova_batch.submit_fallback!
+          result = @hypernova_batch.submit_fallback! if !@configuration.fallback
         end
       else
-        result = @hypernova_batch.submit_fallback!
+        result = @hypernova_batch.submit_fallback! if !@configuration.fallback
       end
 
       new_body = ""
@@ -175,10 +176,10 @@ module Hypernova
           on_success(result, hash)
         rescue StandardError => e
           on_error(e)
-          result = @hypernova_batch.submit_fallback!
+          result = @hypernova_batch.submit_fallback! if !@configuration.fallback
         end
       else
-        result = @hypernova_batch.submit_fallback!
+        result = @hypernova_batch.submit_fallback! if !@configuration.fallback
       end
 
       new_body = ""
