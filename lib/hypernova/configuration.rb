@@ -9,12 +9,14 @@ class Hypernova::Configuration
                 :open_timeout,
                 :port,
                 :scheme,
-                :timeout
+                :timeout,
+                :fallback
 
   def initialize
     @open_timeout = 0.1
     @scheme = :http
     @timeout = 0.6
+    @fallback = true
   end
 
   def http_adapter
