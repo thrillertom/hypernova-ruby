@@ -71,7 +71,9 @@ module Hypernova
     RENDER_STATUS_REGEX = /data-hypernova-cache/
 
     def render_result_without_cache
+      puts "response1: #{defined?(response)}"
       if defined?(response) && response.is_a?(ActionDispatch::Response)
+        puts "response2: #{defined?(response)}"
         response.headers['Cache-Control'] = 'no-store'
       end
     end
